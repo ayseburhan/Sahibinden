@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kullanici_giris/const/urls.dart';
 import 'package:kullanici_giris/services/cookie_manager.dart';
 import 'kullaniciGiris.dart';
 import 'services/UserAuthService.dart';
@@ -16,11 +17,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
 
-  final String baseUrl = Platform.isAndroid
-      ? 'http://172.20.10.2:5207'
-      : 'http://localhost:7001';
 
-  final UserAuthService authService = UserAuthService(baseUrl: baseUrl);
+  final UserAuthService authService = UserAuthService(baseUrl: Urls.BASE_URL);
   final CookieManager cookieManager = CookieManager(); // CookieManager örneği oluşturuyoruz
 
   try {

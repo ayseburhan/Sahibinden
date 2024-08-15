@@ -55,7 +55,7 @@ class UserAuthService {
       },  );
   }
   // Kullanıcı girişi sağlayan fonksiyon
-  Future<bool> loginUser(String email, String password) async {
+  Future<int?> loginUser(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/Kullanici/Login'),
       headers: <String, String>{
@@ -66,14 +66,16 @@ class UserAuthService {
         'kullaniciSifre': password,
       }),
     );
-
     if (response.statusCode == 200) {
-      return true;
+      final responseBody = jsonDecode(response.body);
+      final int? adminBilgi = responseBody['adminbilgi'];
+      return adminBilgi;
     } else {
       print('Giriş başarısız. Durum kodu: ${response.statusCode}');
-      return false;
+      return null;
     }
   }
+
 
   // Admin girişi sağlayan fonksiyon
   Future<bool> loginAdmin(String email, String password) async {

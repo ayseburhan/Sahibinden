@@ -1,35 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:kullanici_giris/services/UserAuthService.dart';
-import 'package:kullanici_giris/services/cookie_manager.dart';
-import 'package:kullanici_giris/kullaniciGiris.dart';
 import 'package:kullanici_giris/ana_sayfa.dart';
+import 'package:kullanici_giris/kullaniciGiris.dart';
 import 'package:kullanici_giris/sepet.dart';
+import 'globals.dart'; // Global değişkenleri import edin
 
 class UyelikBilgileriPage extends StatelessWidget {
-  final Map<String, String> uyelikBilgileri;
-  final CookieManager cookieManager;
-  final UserAuthService authService; // Add this line
+  const UyelikBilgileriPage({Key? key}) : super(key: key);
 
-  const UyelikBilgileriPage({
-    Key? key,
-    required this.uyelikBilgileri,
-    required this.cookieManager,
-    required this.authService, // Add this line
-  }) : super(key: key);
-  
   Future<void> _logout(BuildContext context) async {
     try {
-      // Tüm çerezleri sil
-      await cookieManager.deleteAllCookies();
-      print('Cookies deleted successfully.');
-
-      // Giriş sayfasına yönlendir
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => KullaniciGiris(
-            authService: authService,
-            cookieManager: cookieManager,
+            authService: globalUserInfo.authService,
+            cookieManager: globalUserInfo.cookieManager,
           ),
         ),
       );
@@ -47,6 +32,13 @@ class UyelikBilgileriPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Global değişkenden kullanıcı bilgilerini al
+    final kullaniciAdi = globalUserInfo.kullaniciAdi ?? 'Bilgi yok';
+    final ad = globalUserInfo.kullaniciSoyadi ?? 'Bilgi yok';
+    final soyad = globalUserInfo.kullaniciSoyadi ?? 'Bilgi yok';
+    final email = globalUserInfo.email ?? 'Bilgi yok';
+    final isAdmin = globalUserInfo.isAdmin == 1 ? 'Admin' : 'Kullanıcı';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Üyelik Bilgileri'),
@@ -56,7 +48,9 @@ class UyelikBilgileriPage extends StatelessWidget {
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage(cookieManager: cookieManager)),
+                MaterialPageRoute(
+                  builder: (context) => HomePage(cookieManager: globalUserInfo.cookieManager),
+                ),
                 (Route<dynamic> route) => false,
               );
             },
@@ -77,11 +71,11 @@ class UyelikBilgileriPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Kullanıcı Adı: ${uyelikBilgileri['username'] ?? 'Bilgi yok'}'),
-            Text('Email: ${uyelikBilgileri['email'] ?? 'Bilgi yok'}'),
-            Text('Ad: ${uyelikBilgileri['ad'] ?? 'Bilgi yok'}'),
-            Text('Soyad: ${uyelikBilgileri['soyad'] ?? 'Bilgi yok'}'),
-            Text('Telefon: ${uyelikBilgileri['telefon'] ?? 'Bilgi yok'}'),
+            Text('Kullanıcı Adı: $kullaniciAdi'),
+            Text('Ad: $ad'),
+            Text('Soyad: $soyad'),
+            Text('Email: $email'),
+            Text('Rol: $isAdmin'), // Admin bilgisi ekleyin
             ElevatedButton(
               onPressed: () => _logout(context),
               child: const Text('Oturumu Kapat'),

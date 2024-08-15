@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:kullanici_giris/const/urls.dart';
 import 'package:kullanici_giris/favori_sayfasi.dart';
+import 'package:kullanici_giris/ilan_ekle.dart';
 import 'package:kullanici_giris/kullaniciGiris.dart';
 import 'package:kullanici_giris/productScreen/araba.dart';
 import 'package:kullanici_giris/productScreen/elektronik.dart';
@@ -8,7 +11,8 @@ import 'package:kullanici_giris/productScreen/giysi.dart';
 import 'package:kullanici_giris/sepet.dart';
 import 'package:kullanici_giris/services/UserAuthService.dart';
 import 'package:kullanici_giris/services/cookie_manager.dart';
-import 'package:kullanici_giris/uyelikbilgileri.dart';
+import 'package:kullanici_giris/globals.dart';
+import 'package:kullanici_giris/uyelikBilgileri.dart';
 import 'package:kullanici_giris/productScreen/kategorilerPage.dart';
 import 'package:kullanici_giris/productScreen/productdetail/productDetayPage.dart';
 class HomePage extends StatefulWidget {
@@ -25,8 +29,8 @@ class _HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
   TextEditingController searchController = TextEditingController();
   int _selectedIndex = 0;
-  final UserAuthService authService = UserAuthService(baseUrl: 'http://localhost:5207'); // Bu satır burada olmalı
-
+  final UserAuthService authService = UserAuthService(baseUrl: Urls.BASE_URL); // Bu satır burada olmalı
+  final isAdmin = globalUserInfo.isAdmin == 1;
   
   @override
   void initState() {
@@ -37,7 +41,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _checkLoginStatus() async {
     String? token = await widget.cookieManager.getCookie('token');
     try {
-      UserAuthService authService = UserAuthService(baseUrl: 'http://localhost:5207');
+      UserAuthService authService = UserAuthService(baseUrl: Urls.BASE_URL);
 
       // Token null olabileceği için, nullable türde bir parametre olarak geçirin
       var userInfo = await authService.getUserInfoFromCookie(token ?? '');
@@ -81,7 +85,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => KullaniciGiris(
-                    authService: UserAuthService(baseUrl: 'http://localhost:5207'),
+                    authService: UserAuthService(baseUrl: Urls.BASE_URL),
                     cookieManager: widget.cookieManager,
                     
                   ),
@@ -94,24 +98,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void navigateToUyelikBilgileriPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UyelikBilgileriPage(
-          uyelikBilgileri: {
-            'username': kullaniciAdi,
-            'ad': '', // Ad
-            'soyad': '', // Soyad
-            'email': '', // Email
-            'telefon': '', // Telefon numarası
-            'sifre': '', // Şifre
-          },
-          cookieManager: widget.cookieManager,
-          authService: authService, 
-        ),
-      ),
-    );
-  }
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => UyelikBilgileriPage()
+    ),
+  );
+}
+
 
   void navigateToKategorilerPage() {
     Navigator.push(
@@ -174,13 +168,20 @@ class _HomePageState extends State<HomePage> {
       // Home
         break;
       case 1:
+      if (isAdmin) {
+        // Adminse İlan Ekleme sayfasına git
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => FavoritesPage(cookieManager: widget.cookieManager),
-          ),
+          MaterialPageRoute(builder: (context) => IlanEklemePage()),
         );
-        break;
+      } else {
+        // Kullanıcıysa Favoriler sayfasına git
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FavoritesPage(cookieManager: widget.cookieManager)),
+        );
+      }
+      break;
       case 2:
         Navigator.push(
           context,
@@ -217,7 +218,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => KullaniciGiris(
-                    authService: UserAuthService(baseUrl: 'http://localhost:5207'),
+                    authService: UserAuthService(baseUrl: Urls.BASE_URL),
                     cookieManager: widget.cookieManager,
                   ),
                 ),
@@ -227,11 +228,9 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.login),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-              content: Text('Çıkış işlemi başarılı'),
-              ),
-            );
+              Future.delayed(const Duration(seconds: 1), () {
+                SystemNavigator.pop(); // Uygulamayı kapatır
+              });
             },
           ),
         ],
@@ -373,15 +372,21 @@ ProductCard(
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items:  <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Ana Sayfa',
           ),
+          if(isAdmin)
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favoriler',
-          ),
+              icon:  Icon(Icons.add),
+              label: 'İlan Ekle',
+            )
+            else // Eğer kullanıcıysa, favoriler butonunu göster
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: 'Favoriler',
+            ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Sepet',

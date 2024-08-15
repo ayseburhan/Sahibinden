@@ -34,4 +34,6 @@ class Product {
       urunGorsel: json['urunGorsel'],
     );
   }
+  
+  
 }

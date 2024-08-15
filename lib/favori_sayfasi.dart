@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kullanici_giris/const/urls.dart';
 import 'package:kullanici_giris/services/cookie_manager.dart';
 import 'package:kullanici_giris/services/favoriService.dart';
 
@@ -21,7 +22,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   void initState() {
     super.initState();
-    favoriService = FavoriService(baseUrl: 'http://localhost:5207');
+    favoriService = FavoriService(baseUrl: Urls.BASE_URL);
     _fetchFavorites();
   }
 
