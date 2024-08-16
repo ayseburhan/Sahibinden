@@ -5,7 +5,7 @@ class Product {
   final String urunAciklama;
   final double urunFiyat;
   final int urunStok;
-  final String eklenmeTarihi;
+  final DateTime eklenmeTarihi;
   final String urunDurum;
   final String urunGorsel;
 
@@ -29,11 +29,9 @@ class Product {
       urunAciklama: json['urunAciklama'],
       urunFiyat: json['urunFiyat'],
       urunStok: json['urunStok'],
-      eklenmeTarihi: json['eklenmeTarihi'],
+      eklenmeTarihi: DateTime.parse(json['eklenmeTarihi']),
       urunDurum: json['urunDurum'],
       urunGorsel: json['urunGorsel'],
     );
   }
-  
-  
 }
