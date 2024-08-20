@@ -28,7 +28,7 @@ class KategorilerPage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ArabaPage()),
+                MaterialPageRoute(builder: (context) =>  ArabaPage()),
               );
             },
           ),

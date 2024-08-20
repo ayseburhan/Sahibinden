@@ -178,7 +178,7 @@ class _HomePageState extends State<HomePage> {
         // Kullanıcıysa Favoriler sayfasına git
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => FavoritesPage(cookieManager: widget.cookieManager)),
+          MaterialPageRoute(builder: (context) => FavoritesPage()),
         );
       }
       break;

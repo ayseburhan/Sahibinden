@@ -5,9 +5,9 @@ import 'package:kullanici_giris/services/favoriService.dart';
 
 
 class FavoritesPage extends StatefulWidget {
-  final CookieManager cookieManager;
+  
 
-  const FavoritesPage({Key? key, required this.cookieManager}) : super(key: key);
+  const FavoritesPage({Key? key, }) : super(key: key);
 
   @override
   _FavoritesPageState createState() => _FavoritesPageState();

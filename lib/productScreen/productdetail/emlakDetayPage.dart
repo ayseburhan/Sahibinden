@@ -1,10 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 class EmlakDetayPage extends StatelessWidget {
-  final Map<String, String> ilan;
+  final Map<String, dynamic> ilan;
 
   const EmlakDetayPage({
-    super.key,
     required this.ilan,
   });
 
@@ -12,7 +13,7 @@ class EmlakDetayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(ilan['title'] ?? 'Emlak Detayı'),
+        title: Text(ilan['urunAdi'] ?? 'Emlak Detayı'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -23,20 +24,22 @@ class EmlakDetayPage extends StatelessWidget {
               aspectRatio: 16 / 9,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-                child: Image.network(
-                  ilan['imageUrl'] ?? '',
-                  fit: BoxFit.cover,
-                ),
+                child: ilan['urunGorsel'] != null
+                    ? Image.memory(
+                        base64Decode(ilan['urunGorsel']),
+                        fit: BoxFit.cover,
+                      )
+                    : Icon(Icons.image),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              ilan['title'] ?? '',
+              ilan['urunAdi'] ?? '',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              ilan['price'] ?? '',
+              '${ilan['urunFiyat']} TL',
               style: const TextStyle(fontSize: 20, color: Colors.green),
             ),
             const SizedBox(height: 16),
@@ -46,7 +49,7 @@ class EmlakDetayPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              ilan['description'] ?? '',
+              ilan['urunAciklama'] ?? '',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
@@ -55,7 +58,7 @@ class EmlakDetayPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${ilan['title']} sepete eklendi')),
+                  SnackBar(content: Text('${ilan['urunAdi']} sepete eklendi')),
                 );
               },
               child: const Text('Sepete Ekle'),
@@ -66,7 +69,7 @@ class EmlakDetayPage extends StatelessWidget {
                 onPressed: () {
                   // Favorilere ekleme işlevi burada implement edilebilir
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${ilan['title']} favorilere eklendi')),
+                    SnackBar(content: Text('${ilan['urunAdi']} favorilere eklendi')),
                   );
                 },
                 child: const Text('Favorilere Ekle'),

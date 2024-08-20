@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -15,7 +16,6 @@ class Category {
     required this.kategoriAdi,
   });
 
-  // JSON'dan Category nesnesi oluşturma
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
       id: json['id'],
@@ -23,7 +23,6 @@ class Category {
     );
   }
 
-  // Category nesnesini JSON formatına dönüştürme
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -33,6 +32,8 @@ class Category {
 }
 
 class IlanEklemePage extends StatefulWidget {
+  const IlanEklemePage({super.key});
+
   @override
   _IlanEklemePageState createState() => _IlanEklemePageState();
 }
@@ -41,7 +42,12 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
   final _formKey = GlobalKey<FormState>();
   List<Category> _categories = [];
   Category? _selectedCategory;
-  String _urunAdi = '';
+  TextEditingController urunAdiController = TextEditingController(text: "");
+  TextEditingController urunAciklamaController = TextEditingController();
+  TextEditingController urunFiyatController = TextEditingController();
+  TextEditingController urunStokController = TextEditingController();
+  TextEditingController urunDurumController = TextEditingController(text: "");
+  String urunAdi = '';
   String _urunAciklama = '';
   double _urunFiyat = 0;
   int _urunStok = 0;
@@ -82,23 +88,15 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
-          'id': 0, // Varsayılan değer olarak 0 atanmış
-          'kategoriId': _selectedCategory?.id ??
-              0, // Eğer kategori seçili değilse 0 atanır
-          'urunAdi': _urunAdi ??
-              'string', // Eğer ürün adı belirtilmemişse 'string' atanır
-          'urunAciklama': _urunAciklama ??
-              'string', // Eğer ürün açıklaması belirtilmemişse 'string' atanır
-          'urunFiyat': (_urunFiyat ?? 0)
-              .toInt(), // double değeri int'e dönüştürülüp atanır
-          'urunStok':
-              _urunStok ?? 0, // Eğer ürün stoğu belirtilmemişse 0 atanır
-          'eklenmeTarihi':
-              DateTime.now().toIso8601String(), // Şu anki tarih ve saat atanır
-          'urunDurum': _urunDurum ??
-              'string', // Eğer ürün durumu belirtilmemişse 'string' atanır
-          'urunGorsel': await _convertImageToBase64(_imageFile) ??
-              'string', // Eğer görsel yoksa 'string' atanır
+          'id': 0, 
+          'kategoriId': _selectedCategory?.id ?? 0,
+          'urunAdi': urunAdiController.value.text.toString().isNotEmpty ? urunAdiController.value.text.toString() : 'string',
+          'urunAciklama': _urunAciklama.isNotEmpty ? _urunAciklama : 'string',
+          'urunFiyat': _urunFiyat,
+          'urunStok': _urunStok,
+          'eklenmeTarihi': DateTime.now().toIso8601String(),
+          'urunDurum': _urunDurum.isNotEmpty ? _urunDurum : 'string',
+          'urunGorsel': await _convertImageToBase64(_imageFile) ?? 'string',
         }),
       );
 
@@ -136,7 +134,7 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                 }).toList(),
                 onChanged: (Category? newValue) {
                   setState(() {
-                    _selectedCategory = newValue!;
+                    _selectedCategory = newValue;
                   });
                 },
                 validator: (value) {
@@ -147,6 +145,7 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                 },
               ),
               TextFormField(
+                controller: urunAdiController,
                 decoration: InputDecoration(labelText: 'Ürün Adı'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -155,10 +154,11 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                   return null;
                 },
                 onSaved: (value) {
-                  _urunAdi = value!;
+                  urunAdi = value ?? "";
                 },
               ),
               TextFormField(
+                controller: urunAciklamaController,
                 decoration: InputDecoration(labelText: 'Ürün Açıklaması'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -167,10 +167,11 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                   return null;
                 },
                 onSaved: (value) {
-                  _urunAciklama = value!;
+                  _urunAciklama = value ?? "";
                 },
               ),
               TextFormField(
+                controller: urunFiyatController,
                 decoration: InputDecoration(labelText: 'Ürün Fiyatı'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -180,10 +181,11 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                   return null;
                 },
                 onSaved: (value) {
-                  _urunFiyat = double.parse(value!);
+                  _urunFiyat = double.tryParse(value ?? '0') ?? 0;
                 },
               ),
               TextFormField(
+                controller: urunStokController ,
                 decoration: InputDecoration(labelText: 'Ürün Stok'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -193,10 +195,11 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                   return null;
                 },
                 onSaved: (value) {
-                  _urunStok = int.parse(value!);
+                  _urunStok = int.tryParse(value ?? '0') ?? 0;
                 },
               ),
               TextFormField(
+                controller: urunDurumController,
                 decoration: InputDecoration(labelText: 'Ürün Durumu'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -205,7 +208,7 @@ class _IlanEklemePageState extends State<IlanEklemePage> {
                   return null;
                 },
                 onSaved: (value) {
-                  _urunDurum = value!;
+                  _urunDurum = value ?? "";
                 },
               ),
               ElevatedButton(

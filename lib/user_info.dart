@@ -12,4 +12,6 @@ class UserInfo {
 
   get cookieManager => null;
 
+  get isLoggedIn => null;
+
 }
