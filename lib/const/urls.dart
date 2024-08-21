@@ -1,3 +1,3 @@
 class Urls{
-  static String BASE_URL = "http://172.20.10.2:5207"; 
+  static String BASE_URL = "http://192.168.1.33:5207"; 
 }

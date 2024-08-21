@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-class GiysiDetayPage extends StatelessWidget {
+class SporDetayPage extends StatelessWidget {
   final Map<String, dynamic> ilan;
 
-  const GiysiDetayPage({super.key, required this.ilan});
+  const SporDetayPage({super.key, required this.ilan});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(ilan['urunAdi'] ?? 'Giysi Detayı'),
+        title: Text(ilan['urunAdi'] ?? 'Elektronik Detayı'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

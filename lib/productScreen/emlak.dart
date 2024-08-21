@@ -3,7 +3,6 @@ import 'package:kullanici_giris/const/urls.dart';
 import 'package:kullanici_giris/main_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import 'package:kullanici_giris/productScreen/productdetail/emlakDetayPage.dart';
 
 class EmlakPage extends StatefulWidget {
@@ -37,13 +36,12 @@ class _EmlakPageState extends State<EmlakPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+ Widget build(BuildContext context) {
   return MainScaffold(
     child: Scaffold(
       appBar: AppBar(
         title: const Text('Emlak'),
-        backgroundColor: Colors.teal,
+        backgroundColor:Color.fromARGB(255, 83, 40, 153),
       ),
       body: ilanlar.isEmpty
           ? Center(child: CircularProgressIndicator())
@@ -91,7 +89,7 @@ class _EmlakPageState extends State<EmlakPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.teal,
+                        color: Color.fromARGB(255, 83, 40, 153),
                       ),
                     ),
                     onTap: () {
@@ -109,5 +107,6 @@ class _EmlakPageState extends State<EmlakPage> {
     ),
   );
 }
+
 
 }

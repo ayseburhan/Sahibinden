@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:kullanici_giris/const/urls.dart';
+import 'package:kullanici_giris/main_scaffold.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'productdetail/giysiDetayPage.dart';
 
 class GiysiPage extends StatefulWidget {
@@ -9,188 +13,128 @@ class GiysiPage extends StatefulWidget {
 }
 
 class _GiysiPageState extends State<GiysiPage> {
-  late List<Giysi> filteredGiysiList;
-  TextEditingController controller = TextEditingController();
+ List<dynamic> ilanlar = [];
 
-  @override
+@override
   void initState() {
     super.initState();
-    filteredGiysiList = giysiListesi;
+    fetchUrunlerByKategoriId(6);
   }
 
-  void filterGiysiList(String query) {
-    List<Giysi> filteredList = giysiListesi
-        .where((giysi) =>
-        giysi.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-    setState(() {
-      filteredGiysiList = filteredList;
-    });
+  Future<void> fetchUrunlerByKategoriId(int kategoriId) async {
+    final response = await http.get(Uri.parse('${Urls.BASE_URL}/GetUrunlerByKategoriId?kategoriId=$kategoriId'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      setState(() {
+        ilanlar = data;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Veriler çekilemedi.')),
+      );
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+ Widget build(BuildContext context) {
+  return MainScaffold(
+    child: Scaffold(
       appBar: AppBar(
         title: const Text('Giysi'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: GiysiSearchDelegate(),
-              );
-            },
-          ),
-        ],
+        backgroundColor:Color.fromARGB(255, 197, 112, 197),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: 'Ürün Ara',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    controller.clear();
-                    filterGiysiList('');
-                  },
+      body: ilanlar.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : GridView.builder(
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Bir satırda kaç sütun olacağını belirler
+                  crossAxisSpacing: 8.0, // Sütunlar arasındaki boşluk
+                  mainAxisSpacing: 8.0, // Satırlar arasındaki boşluk
+                  childAspectRatio: 3 / 4, // Kartların en-boy oranı
                 ),
-              ),
-              onChanged: filterGiysiList,
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredGiysiList.length,
+                itemCount: ilanlar.length,
                 itemBuilder: (context, index) {
-                  return _buildGiysiListItem(context, filteredGiysiList[index]);
+                  final ilan = ilanlar[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GiysiDetayPage(ilan: ilan),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12),
+                              ),
+                              child: ilan['urunGorsel'] != null
+                                  ? Image.memory(
+                                      base64Decode(ilan['urunGorsel']),
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Icon(
+                                      Icons.image,
+                                      size: 100,
+                                      color: Colors.grey,
+                                    ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ilan['urunAdi'] ?? 'Ürün Adı',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  ilan['urunAciklama'] ?? 'Ürün Açıklaması',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '${ilan['urunFiyat']} TL',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 197, 112, 197),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 },
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGiysiListItem(BuildContext context, Giysi giysi) {
-    return Card(
-      elevation: 3.0,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundImage: NetworkImage(giysi.imageUrl),
-        ),
-        title: Text(giysi.title),
-        subtitle: Text(giysi.price),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GiysiDetayPage(giysi: giysi),
-            ),
-          );
-        },
-      ),
-    );
-  }
+    ),
+  );
 }
 
-class GiysiSearchDelegate extends SearchDelegate<Giysi?> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    final List<Giysi> results = giysiListesi
-        .where((giysi) => giysi.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: NetworkImage(results[index].imageUrl),
-          ),
-          title: Text(results[index].title),
-          subtitle: Text(results[index].price),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => GiysiDetayPage(giysi: results[index]),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final List<Giysi> suggestionList = giysiListesi
-        .where((giysi) => giysi.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-    return ListView.builder(
-      itemCount: suggestionList.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(suggestionList[index].title),
-          onTap: () {
-            query = suggestionList[index].title;
-            showResults(context);
-          },
-        );
-      },
-    );
-  }
 }
-
-// Örnek giysi listesi
-List<Giysi> giysiListesi = [
-  Giysi(
-    imageUrl: 'https://img3.aksam.com.tr/imgsdisk/2024/04/23/ve-5-yillik-anlasma-tamam-385_2.jpg',
-    title: 'Erkek Ceket',
-    price: '200 TL',
-  ),
-  Giysi(
-    imageUrl: 'https://m.media-amazon.com/images/I/61hTahF1TvL._AC_SY780_.jpg',
-    title: 'Kadın Kazak',
-    price: '150 TL',
-  ),
-  Giysi(
-    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAOLDecM469PVk56LI8iJ0pdqpOJqlm1ljsQ&s',
-    title: 'Erkek Gömlek',
-    price: '80 TL',
-  ),
-  Giysi(
-    imageUrl: 'https://static.ticimax.cloud/cdn-cgi/image/width=-,quality=85/5334/uploads/urunresimleri/buyuk/etek-2cfd1ba2-e.jpg',
-    title: 'Kadın Etek',
-    price: '120 TL',
-  ),
-];

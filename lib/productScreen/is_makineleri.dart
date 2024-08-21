@@ -1,38 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:kullanici_giris/const/urls.dart';
+import 'package:kullanici_giris/main_scaffold.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:kullanici_giris/productScreen/productdetail/isMakineleriDetay.dart';
-import 'yeniIlan.dart';
-
-
-enum IsMakineleriKategori {
-  tumu,
-  tarim,
-  sanayi,
-  insaat,
-  diger,
-}
-
-enum IsMakineleriDurum {
-  tumu,
-  satilik,
-  kiralik,
-  parca,
-}
-
-class IsMakinesi {
-  final String imageUrl;
-  final String title;
-  final String description;
-  final String price;
-  final IsMakineleriKategori kategori;
-
-  IsMakinesi({
-    required this.imageUrl,
-    required this.title,
-    required this.description,
-    required this.price,
-    required this.kategori,
-  });
-}
 
 class IsMakineleriPage extends StatefulWidget {
   const IsMakineleriPage({super.key});
@@ -42,174 +13,129 @@ class IsMakineleriPage extends StatefulWidget {
 }
 
 class _IsMakineleriPageState extends State<IsMakineleriPage> {
-  IsMakineleriKategori selectedKategori = IsMakineleriKategori.tumu;
-  IsMakineleriDurum selectedDurum = IsMakineleriDurum.tumu;
+  List<dynamic> ilanlar = [];
 
-  List<IsMakinesi> tumMakineler = [
-    IsMakinesi(
-      imageUrl: 'https://www.eker-mak.com.tr/wp-content/uploads/2020/12/SFN_1839-1.jpg',
-      title: 'Tarım Makinesi ',
-      description: 'Bu makine tarım işleri için tasarlanmıştır.',
-      price: '50.000 TL',
-      kategori: IsMakineleriKategori.tarim,
-    ),
-    IsMakinesi(
-      imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX_xJfAIDLyliJvUFK7ISP-DqTZgQBRO-z8w&s',
-      title: 'Sanayi Makinesi ',
-      description: 'Bu makine endüstriyel işler için uygun.',
-      price: '100.000 TL',
-      kategori: IsMakineleriKategori.sanayi,
-    ),
-    IsMakinesi(
-      imageUrl: 'https://www.enka.com.tr/u/i/kategori/hitachi-ekskavatorler.jpg',
-      title: 'İnşaat Makinesi ',
-      description: 'Büyük inşaat projeleri için ideal.',
-      price: '200.000 TL',
-      kategori: IsMakineleriKategori.insaat,
-    ),
-    IsMakinesi(
-      imageUrl: 'https://fulljenerator.com/Content/img/hakkimizda_800x800.jpg',
-      title: 'Diğer Makine ',
-      description: 'Genel amaçlı iş makineleri.',
-      price: '80.000 TL',
-      kategori: IsMakineleriKategori.diger,
-    ),
-  ];
-
-  void _ilanEkle(String title, String price, String imageUrl, String description) {
-    setState(() {
-      tumMakineler.add(
-        IsMakinesi(
-          imageUrl: imageUrl,
-          title: title,
-          description: description,
-          price: price,
-          kategori: selectedKategori, // Kategori burada seçilen kategori olarak set ediliyor
-        ),
-      );
-    });
+@override
+  void initState() {
+    super.initState();
+    fetchUrunlerByKategoriId(4);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Future<void> fetchUrunlerByKategoriId(int kategoriId) async {
+    final response = await http.get(Uri.parse('${Urls.BASE_URL}/GetUrunlerByKategoriId?kategoriId=$kategoriId'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      setState(() {
+        ilanlar = data;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Veriler çekilemedi.')),
+      );
+    }
+  }
+
+ Widget build(BuildContext context) {
+  return MainScaffold(
+    child: Scaffold(
       appBar: AppBar(
         title: const Text('İş Makineleri'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => YeniIlanPage(onIlanEkle: _ilanEkle),
+        backgroundColor:Color.fromARGB(255, 209, 101, 29),
+      ),
+      body: ilanlar.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : GridView.builder(
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Bir satırda kaç sütun olacağını belirler
+                  crossAxisSpacing: 8.0, // Sütunlar arasındaki boşluk
+                  mainAxisSpacing: 8.0, // Satırlar arasındaki boşluk
+                  childAspectRatio: 3 / 4, // Kartların en-boy oranı
                 ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildFilterWidget(),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filterMakineler().length,
-              itemBuilder: (context, index) {
-                final makine = _filterMakineler()[index];
-                return ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => IsMakinesiDetay(
-                          imageUrl: makine.imageUrl,
-                          title: makine.title,
-                          description: makine.description,
-                          price: makine.price,
+                itemCount: ilanlar.length,
+                itemBuilder: (context, index) {
+                  final ilan = ilanlar[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => IsMakinesiDetay(ilan: ilan),
                         ),
+                      );
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    );
-                  },
-                  leading: Image.network(
-                    makine.imageUrl,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  ),
-                  title: Text(makine.title),
-                  subtitle: Text(makine.description),
-                  trailing: Text(makine.price),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                      elevation: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12),
+                              ),
+                              child: ilan['urunGorsel'] != null
+                                  ? Image.memory(
+                                      base64Decode(ilan['urunGorsel']),
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Icon(
+                                      Icons.image,
+                                      size: 100,
+                                      color: Colors.grey,
+                                    ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ilan['urunAdi'] ?? 'Ürün Adı',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  ilan['urunAciklama'] ?? 'Ürün Açıklaması',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '${ilan['urunFiyat']} TL',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 209, 101, 29),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+    ),
+  );
+}
 
-  List<IsMakinesi> _filterMakineler() {
-    return tumMakineler.where((makine) {
-      bool kategoriMatch = selectedKategori == IsMakineleriKategori.tumu ||
-          makine.kategori == selectedKategori;
-      bool durumMatch = selectedDurum == IsMakineleriDurum.tumu;
-      return kategoriMatch && durumMatch;
-    }).toList();
-  }
 
-  Widget _buildFilterWidget() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Kategori Seçiniz',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          DropdownButton<IsMakineleriKategori>(
-            value: selectedKategori,
-            onChanged: (value) {
-              setState(() {
-                selectedKategori = value!;
-              });
-            },
-            items: IsMakineleriKategori.values
-                .map((kategori) => DropdownMenuItem(
-              value: kategori,
-              child: Text(kategori.toString().split('.').last),
-            ))
-                .toList(),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Durum Seçiniz',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          DropdownButton<IsMakineleriDurum>(
-            value: selectedDurum,
-            onChanged: (value) {
-              setState(() {
-                selectedDurum = value!;
-              });
-            },
-            items: IsMakineleriDurum.values
-                .map((durum) => DropdownMenuItem(
-              value: durum,
-              child: Text(durum.toString().split('.').last),
-            ))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
 }
